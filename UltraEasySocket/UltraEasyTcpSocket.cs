@@ -394,6 +394,9 @@ namespace UltraEasySocket
             {
                 this.socketResourceManager.CloseSocket(socket);
                 this.socketResourceManager.FreeSocketAsyncEventArgs(args);
+
+                this.userCallback(CallbackEventType.CONNECT_FAIL, session, args.SocketError);
+                DisposeSocketSession(session);
                 return;
             }
 

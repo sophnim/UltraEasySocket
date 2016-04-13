@@ -35,14 +35,14 @@ namespace UltraEasySocket.EchoTest
             switch (eventType)
             {
                 case CallbackEventType.CONNECT_FAIL: // TryConnect() failed
-                    // fromID : TryConnect() return value: sessionID
+                    // eventFrom : TryConnect() return value: SocketSession
                     // param : (SocketError)
-                    Console.WriteLine("Connect to Server Failed!");
+                    Console.WriteLine("Connect to Server Failed! {0}");
                     break;
 
 
                 case CallbackEventType.CONNECT_SUCCESS: // TryConnect() succeed
-                    // fromID : TryConnect() return value: SessionID
+                    // eventFrom : TryConnect() return value: SocketSession
                     {
                         var session = eventFrom as SocketSession;
                         this.sessionDic.TryAdd(session, 0);
@@ -54,7 +54,7 @@ namespace UltraEasySocket.EchoTest
 
 
                 case CallbackEventType.SESSION_RECEIVE_DATA: // Session received data
-                                                             // fromID : sessionID that received data
+                                                             // eventFrom : SocketSession that received data
                                                              // param : received byte array : (byte[])
                     {
                         var session = eventFrom as SocketSession;
@@ -66,9 +66,9 @@ namespace UltraEasySocket.EchoTest
 
                 case CallbackEventType.SESSION_CLOSED: // Session has been closed
                     {
-                        var session = eventFrom as SocketSession;
+                        var closedSession = eventFrom as SocketSession;
                         int v;
-                        this.sessionDic.TryRemove(session, out v);
+                        this.sessionDic.TryRemove(closedSession, out v);
                     }
                     break;
             }

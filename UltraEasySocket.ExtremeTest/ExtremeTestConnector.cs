@@ -46,14 +46,14 @@ namespace UltraEasySocket.ExtremeTest
             switch (eventType)
             {
                 case CallbackEventType.CONNECT_FAIL: // TryConnect() failed
-                    // fromID : TryConnect() return value: sessionID
+                    // eventFrom : TryConnect() return value: SocketSession
                     // param : (SocketError)
                     Console.WriteLine("Connect to Server Failed!");
                     break;
 
 
                 case CallbackEventType.CONNECT_SUCCESS: // TryConnect() succeed
-                    // fromID : TryConnect() return value: SessionID
+                    // eventFrom : TryConnect() return value: SocketSession
                     {
                         var session = eventFrom as SocketSession;
                         int start = 0;
@@ -70,7 +70,7 @@ namespace UltraEasySocket.ExtremeTest
 
 
                 case CallbackEventType.SESSION_RECEIVE_DATA: // Session received data
-                                                             // fromID : sessionID that received data
+                                                             // eventFrom : SocketSession that received data
                                                              // param : received byte array : (byte[])
                     {
                         var session = eventFrom as SocketSession;
@@ -111,8 +111,7 @@ namespace UltraEasySocket.ExtremeTest
                         {
                             Task.Run(() =>
                             {
-                            //Console.WriteLine("Listener Disconnect {0}", fromID);
-                            this.ultraES.CloseSession(session);
+                                this.ultraES.CloseSession(session);
                             });
                         }
                         
@@ -122,10 +121,9 @@ namespace UltraEasySocket.ExtremeTest
 
                 case CallbackEventType.SESSION_CLOSED: // Session has been closed
                     {
-                        var session = eventFrom as SocketSession;
+                        var closedSession = eventFrom as SocketSession;
                         long v;
-                        this.sendNumDic.TryRemove(session, out v);
-                        //Console.WriteLine("Connector Closed {0}", fromID);
+                        this.sendNumDic.TryRemove(closedSession, out v);
                         // reconnect
                         this.ultraES.TryConnect(this.ip, this.portNum);
                     }
