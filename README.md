@@ -21,7 +21,7 @@ Most programmer's networking need is simple: I send byte array and You receive s
 
 UltraEasySocket is Thread-Safe, implemented by Lock-Free algorithm, Resource Pooling, and has internal message encryption!
 
-울트라이지소켓은 Thread-Safe하여 멀티 쓰레드 프로그램 작성에 용이하며, .Net Framework4의 Concurrent 컬렉션을 사용한 Lock-Free 구조로 구현되었습니다. 리소스 풀링을 통해 자원 생성 삭제의 부하를 줄였고 메시지 암호화 기능을 제공하여 엄격한 보안이 필요한 소켓 연결에도 쉽게 사용될 수 있습니다.
+울트라이지소켓은 Thread-Safe하여 멀티 쓰레드 프로그램 작성에 용이하며, Lock-Free 구조로 구현되었습니다. 리소스 풀링을 통해 자원 생성 삭제의 부하를 줄였고 메시지 암호화 기능을 제공하여 엄격한 보안이 필요한 소켓 연결에도 쉽게 사용될 수 있습니다.
 
 This is the simplest but Hi-performance, and reliable solution for socket networking.
 
@@ -54,46 +54,47 @@ UltraEasySocket namespace를 사용함을 명시합니다.
 
 UltraEasyTcpSocket 인스턴스를 생성합니다. 여러개의 Listen, Connect를 한다고 해도 이 인스턴스는 프로그램당 1개만 있으면 됩니다. 
 
-        var ultraES = new UltraEasyTcpSocket(new Action<CallbackEventType, long, object>(OnSocketEventCallback));
+        var ultraES = new UltraEasyTcpSocket(new Action<CallbackEventType, object, object>(OnSocketEventCallback));
 
 
 **UltraEasySocket is callback based. Define callback function with this parameters :**
 
-인스턴스를 생성할때 콜백함수를 지정해야 합니다. 콜백함수는 다음과 같은 형식으로 구성됩니다. 콜백 파라미터 eventType으로 어떤 이벤트에 대한 콜백인지를 알 수 있습니다. 각각의 eventType에 따라 나머지 파라미터 fromID, param이 의미하는 바가 달라집니다.
+인스턴스를 생성할때 콜백함수를 지정해야 합니다. 콜백함수는 다음과 같은 형식으로 구성됩니다. 콜백 파라미터 eventType으로 어떤 이벤트에 대한 콜백인지를 알 수 있습니다. 각각의 eventType에 따라 나머지 파라미터 eventFrom, param이 의미하는 바가 달라집니다.
 
-        public void OnSocketEventCallback(CallbackEventType eventType, long fromID, Object param)
+        public void OnSocketEventCallback(CallbackEventType eventType, object eventFrom, Object param)
         {
                 switch (eventType)
                 {
                 case CallbackEventType.ACCEPT_FAIL: // some AcceptAsync() function fails 
-                        // fromID : StartListen() return value: listenID
-                        // StartListen()호출 이후 Listen 실패한 경우입니다. fromID는 StartListen()이 반환한 값(ListenID)입니다.
+                        // eventFrom : StartListen() return value: listenID
+                        // StartListen()호출 이후 Listen 실패한 경우입니다. eventFrom은 StartListen()이 반환한 값(ListenID)입니다.
                         break;
 
                 case CallbackEventType.ACCEPT_SUCCESS: // Accepted new session : Connection Estabilished
-                        // fromID : StartListen() return value: listenID
-                        // param : (long)acceptedSessionID
+                        // eventFrom : StartListen() return value: listenID
+                        // param : accepted SocketSession
                         // StartListen() 호출 이후 새로운 연결을 성공적으로 받은 경우입니다.
-                        // fromID는 StartListen()이 반환한 값(ListenID)입니다. 이 값으로 어떤 Listen Socket이 Accept한 것인지를
+                        // eventFrom은 StartListen()이 반환한 값(ListenID)입니다. 이 값으로 어떤 Listen Socket이 Accept한 것인지를
                         // 구별할 수 있습니다.
-                        // Object 타입인 param을 long형으로 변환하면 새로 받은 연결의 sessionID를 알 수 있습니다.
+                        // Object 타입인 param은 SocketSession 클래스로 캐스팅해서 사용합니다. 새로 받은 연결의 SocketSession 객체입니다.
                         break;
 
                 case CallbackEventType.CONNECT_FAIL: // TryConnect() failed
-                        // fromID : TryConnect() return value: sessionID
+                        // eventFrom : TryConnect() returned object: SocketSession
                         // param : (SocketError)
                         // TryConnect() 호출 이후 연결에 실패한 경우입니다.
+                        // eventFrom은 TryConnect()가 반환한 SocketSession 클래스입니다. 이 클래스를 서로 비교해서 어떤 TryConnect()에 의한 이벤트인지를 구별할 수 있습니다.
                         // Object 타입인 param을 SocketError로 변환하면 연결 실패시 발생한 소켓 에러 코드를 알 수 있습니다.
                         break;
 
                 case CallbackEventType.CONNECT_SUCCESS: // TryConnect() succeed : Connection Estabilished
-                        // fromID : TryConnect() return value: SessionID
+                        // eventFrom : TryConnect() returned object: SocketSession
                         // TryConnect() 호출 이후 연결에 성공한 경우입니다.
-                        // fromID는 TryConnect()가 반환한 값(sessionID)입니다. 이 값으로 어떤 세션이 연결된 것인지를 알 수 있습니다.
+                        // eventFrom은 TryConnect()가 반환한 SocketSession 클래스입니다. 이 클래스를 서로 비교해서 어떤 TryConnect()에 의한 접속 성공 이벤트인지를 구별할 수 있습니다.
                         break;
       
                 case CallbackEventType.SESSION_RECEIVE_DATA: // Session received data
-                        // fromID : sessionID that receive data
+                        // eventFrom : SocketSession that receive data
                         // param : received byte array (byte[])
                         // 연결된 세션이 데이터를 수신한 경우입니다.
                         // fromID는 데이터를 수신한 sessionID입니다.
@@ -102,7 +103,7 @@ UltraEasyTcpSocket 인스턴스를 생성합니다. 여러개의 Listen, Connect
                         break;
       
                 case CallbackEventType.SESSION_CLOSED: // Session has been closed
-                        // fromID : closed sessionID
+                        // eventFrom : closed SocketSession
                         // 내가 CloseSession()했거나 상대방이 끊었거나 어떤 경우든 세션이 끊어진 경우입니다.
                         break;
                 }
@@ -122,35 +123,37 @@ UltraEasyTcpSocket 인스턴스를 생성합니다. 여러개의 Listen, Connect
 
 StartListen()한 포트로 접속을 시도할 수 있습니다:
 
-        long sessionID = ultraES.TryConnect("127.0.0.1", 12300);
+        SocketSession session = ultraES.TryConnect("127.0.0.1", 12300);
         
-TryConnect() function tries to connect to ip address "127.0.0.1" port 12300. It Immediately returns sessionID, but does not means that connect estabilished. If connect succeed or failed, callback will be executed. 
+TryConnect() function tries to connect to ip address "127.0.0.1" port 12300. It Immediately returns SocketSession class, but does not means that connect estabilished. If connect succeed or failed, callback will be executed. 
 
-TryConnect()함수로 접속을 시도합니다. 예시 코드에서는 IP주소 "127.0.0.1"의 포트 12300으로 접속하고 있습니다. 이 함수는 즉각적으로 반환되며 long 타입의 sessionID를 반환합니다. 반환시점에서는 아직 연결이 안되었을 수 있습니다. 연결이 완료되면 콜백함수가 호출됩니다.
+TryConnect()함수로 접속을 시도합니다. 예시 코드에서는 IP주소 "127.0.0.1"의 포트 12300으로 접속하고 있습니다. 이 함수는 즉각적으로 반환되며 SocketSession 클래스를 반환합니다. 반환시점에서는 아직 연결이 안되었을 수 있습니다. 연결이 완료되면 콜백함수가 호출됩니다.
 
 CallbackEventType.CONNECT_FAIL means that TryConnect() has been failed. 
 CallbackEventType.CONNECT_SUCCESS means that TryConnect() has been succeed and You can send data now.
 
 콜백함수에서의 이벤트타입이 CallbackEventType.CONNECT_FAIL인 경우는 연결에 실패한 경우입니다.
-콜백함수에서의 이벤트타입이 CallbackEventType.CONNECT_SUCCESS인 경우는 연결에 성공한 경우입니다. fromID와 TryConnect()시 반환된 sessionID를 비교해서 어떤 TryConnect()에 대한 이벤트인지를 구분할 수 있습니다.
+콜백함수에서의 이벤트타입이 CallbackEventType.CONNECT_SUCCESS인 경우는 연결에 성공한 경우입니다. 콜백함수의 파라미터인 eventFrom이 연결된 SocketSession입니다. TryConnect()시 반환된 SocketSession를 비교해서 어떤 TryConnect()에 대한 이벤트인지를 구분할 수 있습니다.
 
 If TryConnect() success, The listener will callback with CallbackEventType.ACCEPT_SUCCESS. Accepted SessionID is specified. Of cause You can send data to Accepted Session.
 
+TryConnect()가 성공해서 연결이 이루어지면, 리스너측에서도 ACCEPT_SUCCESS 이벤트 콜백이 실행됩니다. 이때 콜백 파라미터의 param이 Accept된 SocketSession 객체이고 이후로 데이터 송수신이 가능합니다.
+
 **You can send byte array to session with sessionID.**
 
-Send()함수로 연결된 sessionID를 이용해서 세션에 바이트 배열을 전송할 수 있습니다:
+Send()함수로 연결된 SocketSession를 이용해서 세션에 바이트 배열을 전송할 수 있습니다:
 
         var bytes = new byte[100];
         // write data in bytes...
-        
-        ultraES.Send(sessionID, bytes);
+        // session is connected(or accepted) SocketSession instance
+        ultraES.Send(session, bytes);
         
 If Send() success, data received session will execute callback with CallbackEventType.SESSION_RECEIVE_DATA. You can receive data by casting param object like this:
 
-Send()가 성공하면 데이터를 수신한 세션은 콜백함수를 호출합니다. 이때 콜백함수 파라미터 fromID에는 데이터를 수신한 세션의 sessionID, param에는 수신한 바이트 배열값이 들어가 있습니다. param을 (byte[])으로 캐스팅하여 값을 얻어옵니다. 
+Send()가 성공하면 데이터를 수신한 세션은 콜백함수를 호출합니다. 이때 콜백함수 파라미터 eventFrom에는 데이터를 수신한 SocketSession, param에는 수신한 바이트 배열값이 들어가 있습니다. param을 (byte[])으로 캐스팅하여 값을 얻어옵니다. 
 
         case CallbackEventType.SESSION_RECEIVE_DATA: // Session received data
-                // fromID : sessionID that receive data
+                // eventFrom : SocketSession that receive data
                 // param : received byte array (byte[])
                 var receivedByteArray = (byte[])param;
                 // do something with receivedByteArray...
@@ -166,7 +169,7 @@ If I send you 100byte array, You will receive same 100byte array. Sent data will
 
 연결된 세션을 끊고 싶으면 CloseSession()함수를 호출합니다.
 
-        ultraES.CloseSession(sessionID);
+        ultraES.CloseSession(session);
 
 This will close session. The session will execute callback with CallbackEventType.SESSION_CLOSED when socket closing completed. 
 If some kind of socket error happen that session could not be maintained, or socket has disconnected by peer, session will execute callback with CallbackEventType.SESSION_CLOSED. 
